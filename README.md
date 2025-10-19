@@ -5,10 +5,10 @@ A Telegram bot that helps you manage and track Rightel SIM cards charging schedu
 ## Features
 
 - View all SIM cards and their charging status
-- Mark SIM cards as charged with admin tracking
-- Receive reminders for SIM cards that need charging (after 150 days)
-- View charging history for each SIM card
-- Admin authentication for secure access
+- Mark SIM cards as charged (tracks who charged)
+- Receive reminders for SIM cards that need charging (after `REMINDER_DAYS`)
+- Admin-only access
+- Express endpoints for health check and cron trigger on Render
 
 ## Setup Instructions
 
@@ -63,21 +63,31 @@ npm start
 
 ### Deploying to Render
 
-1. Create a new Web Service on Render
+1. Create a new `Web Service` on Render (Node runtime)
 2. Connect your GitHub repository
 3. Set the build command: `npm install`
 4. Set the start command: `npm start`
 5. Add environment variables from your `.env` file
 6. Deploy the service
 
+#### Service endpoints
+- `GET /healthz` returns `{ status: 'ok' }` and current time
+- `GET /cron/check` triggers the reminder/broadcast check immediately
+
+#### Keep-alive and scheduled reminders
+- On free plans, Render may spin down after inactivity. Use an external pinger (e.g., UptimeRobot) to hit `https://<your-service>.onrender.com/healthz` every 10–14 minutes to keep it warm.
+- To ensure reminders run regularly, set a pinger to call `https://<your-service>.onrender.com/cron/check` at your preferred schedule (e.g., daily at 09:00). The app also runs a cron internally at 09:00 Asia/Tehran.
+
+Render automatically provides a `PORT` environment variable; the server binds to it when present.
+
 ## Bot Commands
 
 - `/start` - Start the bot and show the main menu
 - `/help` - Show help information
-- `/view_sims` - View all SIM cards and their status
-- `/mark_charged` - Mark a SIM card as charged
-- `/view_reminders` - View SIM cards due for charging
-- `/view_history` - View charging history for SIM cards
+- `/viewsims` - View all SIM cards and their status
+- `/markcharged` - Mark a SIM card as charged
+- `/viewreminders` - View SIM cards due for charging
+- `/addsim` - Add a SIM card
 
 ## Flow Diagram
 

@@ -3,6 +3,9 @@ const TelegramBot = require('node-telegram-bot-api');
 const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const moment = require('moment');
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -23,6 +26,8 @@ const reminderDays = parseInt(process.env.REMINDER_DAYS) || 150;
 const { handleStart, handleHelp } = require('./handlers/basicHandlers');
 const { handleViewSims, handleMarkCharged, handleViewReminders } = require('./handlers/simHandlers');
 const { checkAndSendReminders } = require('./handlers/reminderHandler');
+// Prepare reminder check runner for cron and HTTP endpoint
+const runReminderCheck = checkAndSendReminders(bot, supabase, adminIds, reminderDays);
 
 // Check if user is admin
 function isAdmin(userId) {
@@ -295,8 +300,29 @@ bot.on('callback_query', async (callbackQuery) => {
 });
 
 // Schedule daily reminder check
-cron.schedule('0 9 * * *', () => {
-  checkAndSendReminders(bot, supabase, adminIds, reminderDays);
+cron.schedule('0 9 * * *', runReminderCheck, { timezone: 'Asia/Tehran' });
+
+// HTTP server for Render (health and cron trigger)
+app.get('/', async (req, res) => {
+  res.send('RightelYar bot is running');
+});
+
+app.get('/healthz', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
+app.get('/cron/check', async (req, res) => {
+  try {
+    await runReminderCheck();
+    res.json({ status: 'ok', triggered: true });
+  } catch (err) {
+    console.error('Error triggering reminder check via HTTP:', err);
+    res.status(500).json({ status: 'error', message: 'Failed to run reminder check' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`HTTP server listening on port ${PORT}`);
 });
 
 console.log('Bot is running...');

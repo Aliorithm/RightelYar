@@ -21,7 +21,8 @@
     "node-cron": "^3.0.2",
     "node-telegram-bot-api": "^0.64.0",
     "@supabase/supabase-js": "^2.39.0",
-    "moment": "^2.29.4"
+    "moment": "^2.29.4",
+    "express": "^4.19.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
