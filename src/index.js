@@ -20,7 +20,7 @@ const bot = new TelegramBot(token, { polling: true });
 const adminIds = process.env.ADMIN_TELEGRAM_IDS.split(',').map(id => id.trim());
 
 // Days threshold for reminders
-const reminderDays = parseInt(process.env.REMINDER_DAYS) || 150;
+const reminderDays = parseInt(process.env.REMINDER_DAYS) || 60;
 
 // Import handlers
 const { handleStart, handleHelp } = require('./handlers/basicHandlers');
@@ -42,7 +42,7 @@ bot.on('message', (msg) => {
   }
   
   if (msg.from && !isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی!');
     return;
   }
   
@@ -61,7 +61,7 @@ bot.on('message', (msg) => {
 
       case '➕ Add SIM Card':
         // Trigger the same flow as /addsim command
-        bot.sendMessage(msg.chat.id, 'Please enter the SIM card number in the format: 0921-XXX-XXXX', {
+        bot.sendMessage(msg.chat.id, 'لطفا شماره رو به فرمت درست وارد کن: 0921-XXX-XXXX', {
           reply_markup: {
             force_reply: true
           }
@@ -76,7 +76,7 @@ bot.on('message', (msg) => {
             // Validate SIM card number format
             const simNumberRegex = /^0\d{3}-\d{3}-\d{4}$|^0\d{10}$/;
             if (!simNumberRegex.test(simNumber)) {
-              bot.sendMessage(chatId, 'Invalid SIM card number format. Please use the format: 0921-XXX-XXXX');
+              bot.sendMessage(chatId, 'فرمت درست رو وارد نکردی');
               return;
             }
             
@@ -91,7 +91,7 @@ bot.on('message', (msg) => {
               if (checkError) throw checkError;
               
               if (existingSim) {
-                bot.sendMessage(chatId, `SIM card ${simNumber} already exists in the database.`);
+                bot.sendMessage(chatId, `شماره ${simNumber} از قبل ذخیره شده.`);
                 return;
               }
               
@@ -106,10 +106,10 @@ bot.on('message', (msg) => {
                 
               if (insertError) throw insertError;
               
-              bot.sendMessage(chatId, `✅ SIM card ${simNumber} has been added to the database.`);
+              bot.sendMessage(chatId, `✅ شماره ${simNumber} به دیتابیس اضافه شد.`);
             } catch (error) {
               console.error('Error adding SIM card:', error);
-              bot.sendMessage(chatId, 'Error adding SIM card. Please try again later.');
+              bot.sendMessage(chatId, 'مشکل برام پیش آمده. به علی بگین درستم کنه');
             }
           });
           
@@ -129,7 +129,7 @@ bot.on('message', (msg) => {
 // Command handlers with admin checks
 bot.onText(/\/start/, (msg) => {
   if (!isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی');
     return;
   }
   handleStart(bot)(msg);
@@ -137,7 +137,7 @@ bot.onText(/\/start/, (msg) => {
 
 bot.onText(/\/help/, (msg) => {
   if (!isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی');
     return;
   }
   handleHelp(bot)(msg);
@@ -146,7 +146,7 @@ bot.onText(/\/help/, (msg) => {
 // Support both command formats for backward compatibility
 bot.onText(/\/(viewsims|view_sims)/, (msg) => {
   if (!isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی');
     return;
   }
   handleViewSims(bot, supabase)(msg);
@@ -154,7 +154,7 @@ bot.onText(/\/(viewsims|view_sims)/, (msg) => {
 
 bot.onText(/\/(markcharged|mark_charged)/, (msg) => {
   if (!isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی');
     return;
   }
   handleMarkCharged(bot, supabase)(msg);
@@ -162,7 +162,7 @@ bot.onText(/\/(markcharged|mark_charged)/, (msg) => {
 
 bot.onText(/\/(viewreminders|view_reminders)/, (msg) => {
   if (!isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی');
     return;
   }
   handleViewReminders(bot, supabase, reminderDays)(msg);
@@ -173,11 +173,11 @@ bot.onText(/\/(viewreminders|view_reminders)/, (msg) => {
 // Add SIM card handler
 bot.onText(/\/addsim/, (msg) => {
   if (!isAdmin(msg.from.id)) {
-    bot.sendMessage(msg.chat.id, 'Sorry, this bot is only available for authorized administrators.');
+    bot.sendMessage(msg.chat.id, 'اشتباه اومدی به این پارتی دعوت نشدی');
     return;
   }
   
-  bot.sendMessage(msg.chat.id, 'Please enter the SIM card number in the format: 0921-XXX-XXXX', {
+  bot.sendMessage(msg.chat.id, 'لطفا شماره رو به فرمت درست وارد کن: 0921-XXX-XXXX', {
     reply_markup: {
       force_reply: true
     }
@@ -192,7 +192,7 @@ bot.onText(/\/addsim/, (msg) => {
       // Validate SIM card number format
       const simNumberRegex = /^0\d{3}-\d{3}-\d{4}$|^0\d{10}$/;
       if (!simNumberRegex.test(simNumber)) {
-        bot.sendMessage(chatId, 'Invalid SIM card number format. Please use the format: 0921-XXX-XXXX');
+        bot.sendMessage(chatId, 'فرمت رو به درستی رعایت نکردی');
         return;
       }
       
@@ -207,7 +207,7 @@ bot.onText(/\/addsim/, (msg) => {
         if (checkError) throw checkError;
         
         if (existingSim) {
-          bot.sendMessage(chatId, `SIM card ${simNumber} already exists in the database.`);
+          bot.sendMessage(chatId, `شماره ${simNumber} از قبل داخل دیتابیس ذخیره شده.`);
           return;
         }
         
@@ -222,10 +222,10 @@ bot.onText(/\/addsim/, (msg) => {
           
         if (insertError) throw insertError;
         
-        bot.sendMessage(chatId, `✅ SIM card ${simNumber} has been added to the database.`);
+        bot.sendMessage(chatId, `✅ شماره ${simNumber} به دیتابیس اضافه شد.`);
       } catch (error) {
         console.error('Error adding SIM card:', error);
-        bot.sendMessage(chatId, 'Error adding SIM card. Please try again later.');
+        bot.sendMessage(chatId, 'مشکل برام پیش آمده به علی بگین درستم کنه');
       }
     });
     
@@ -273,11 +273,11 @@ bot.on('callback_query', async (callbackQuery) => {
       if (updateError) throw updateError;
 
       bot.answerCallbackQuery(callbackQuery.id, { 
-        text: `SIM ${sim.number} marked as charged!` 
+        text: `وضعیت شماره ${sim.number} شارژ شد!` 
       });
       
       bot.editMessageText(
-        `✅ SIM ${sim.number} has been marked as charged by ${chargedBy}.`,
+        `✅ شماره ${sim.number} توسط ${chargedBy} شارژ شد.`,
         {
           chat_id: msg.chat.id,
           message_id: msg.message_id,
@@ -291,7 +291,7 @@ bot.on('callback_query', async (callbackQuery) => {
     } catch (error) {
       console.error('Error marking SIM as charged:', error);
       bot.answerCallbackQuery(callbackQuery.id, { 
-        text: 'Error marking SIM as charged. Please try again.' 
+        text: 'خطا.' 
       });
     }
   } else if (data === 'view_sims') {

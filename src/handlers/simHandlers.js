@@ -46,21 +46,16 @@ const handleViewSims = (bot, supabase) => async (msg) => {
     sims.forEach((sim, index) => {
       const lastCharged = sim.last_charged ? moment(sim.last_charged) : null;
       const daysRemaining = lastCharged
-        ? 180 - now.diff(lastCharged, "days")
+        ? 90 - now.diff(lastCharged, "days")
         : "Never charged";
 
-      message += `*${index + 1}. ${sim.number}*\n`;
-      message += `آخرین شارژ: ${
-        lastCharged ? lastCharged.format("YYYY-MM-DD") : "Never"
-      }\n`;
-      message += `وضعیت: ${
+      message += `*${index + 1}. ${sim.number}* ${
         typeof daysRemaining === "number"
           ? formatDaysRemaining(daysRemaining)
           : daysRemaining
-      }\n`;
-      if (sim.charged_by) {
-        message += `آخرین شارژ توسط: ${sim.charged_by}\n`;
-      }
+      }`;
+      
+
       message += "\n";
     });
 
@@ -100,14 +95,14 @@ const handleMarkCharged = (bot, supabase) => async (msg) => {
     sims.forEach((sim) => {
       const lastCharged = sim.last_charged ? moment(sim.last_charged) : null;
       const daysRemaining = lastCharged
-        ? 180 - now.diff(lastCharged, "days")
+        ? 90 - now.diff(lastCharged, "days")
         : "Never";
 
       inlineKeyboard.push([
         {
           text: `${sim.number} (${
             typeof daysRemaining === "number"
-              ? daysRemaining + " روزهای باقیمانده"
+              ? daysRemaining + " روز باقیمانده"
               : daysRemaining
           })`,
           callback_data: `mark_charged:${sim.id}`,
@@ -165,8 +160,10 @@ const handleViewReminders = (bot, supabase, reminderDays) => async (msg) => {
 
       const lastCharged = moment(sim.last_charged);
       const daysSinceCharge = now.diff(lastCharged, "days");
+      const daysRemaining = reminderDays - daysSinceCharge;
 
-      return daysSinceCharge >= reminderDays;
+      // Show SIMs that have passed the reminder threshold OR are in critical state (less than 30 days remaining)
+      return daysSinceCharge >= reminderDays || (daysRemaining > 0 && daysRemaining <= 30);
     });
 
     if (dueSims.length === 0) {
@@ -184,18 +181,15 @@ const handleViewReminders = (bot, supabase, reminderDays) => async (msg) => {
       const daysSinceCharge = lastCharged
         ? now.diff(lastCharged, "days")
         : "Never charged";
-      const daysRemaining = lastCharged ? 180 - daysSinceCharge : "N/A";
+      const daysRemaining = lastCharged ? reminderDays - daysSinceCharge : "N/A";
 
       message += `*${index + 1}. ${sim.number}*\n`;
-      message += `آخرین شارژ: ${
-        lastCharged ? lastCharged.format("YYYY-MM-DD") : "Never"
-      }\n`;
       message += `روز گذشته از شارژ: ${daysSinceCharge}\n`;
       message += `روز باقیمانده: ${
         typeof daysRemaining === "number" ? daysRemaining : daysRemaining
       }\n`;
       if (sim.charged_by) {
-        message += `Last charged by: ${sim.charged_by}\n`;
+        message += `آخرین شارژ توسط: ${sim.charged_by}\n`;
       }
       message += "\n";
     });
@@ -203,7 +197,7 @@ const handleViewReminders = (bot, supabase, reminderDays) => async (msg) => {
     // Add inline keyboard to mark SIMs as charged
     const inlineKeyboard = dueSims.map((sim) => [
       {
-        text: `وضعیت ${sim.number} به شارژ شده تغییر یافت`,
+        text: `تغییر وضعیت ${sim.number} به شارژ شده؟ (کلیک)`,
         callback_data: `mark_charged:${sim.id}`,
       },
     ]);

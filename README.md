@@ -34,7 +34,7 @@ A Telegram bot that helps you manage and track Rightel SIM cards charging schedu
    - `SUPABASE_URL`: Your Supabase project URL
    - `SUPABASE_KEY`: Your Supabase service role key
    - `ADMIN_TELEGRAM_IDS`: Comma-separated list of admin Telegram IDs
-   - `REMINDER_DAYS`: Days threshold for reminders (default: 150)
+   - `REMINDER_DAYS`: Days threshold for reminders (default: 60)
 
 ### Database Setup
 
@@ -71,10 +71,12 @@ npm start
 6. Deploy the service
 
 #### Service endpoints
+
 - `GET /healthz` returns `{ status: 'ok' }` and current time
 - `GET /cron/check` triggers the reminder/broadcast check immediately
 
 #### Keep-alive and scheduled reminders
+
 - On free plans, Render may spin down after inactivity. Use an external pinger (e.g., UptimeRobot) to hit `https://<your-service>.onrender.com/healthz` every 10–14 minutes to keep it warm.
 - To ensure reminders run regularly, set a pinger to call `https://<your-service>.onrender.com/cron/check` at your preferred schedule (e.g., daily at 09:00). The app also runs a cron internally at 09:00 Asia/Tehran.
 
