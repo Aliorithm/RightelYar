@@ -22,7 +22,8 @@
     "express": "^4.21.2",
     "moment": "^2.29.4",
     "node-cron": "^3.0.2",
-    "node-telegram-bot-api": "^0.64.0"
+    "node-telegram-bot-api": "^0.64.0",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
