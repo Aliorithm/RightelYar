@@ -36,7 +36,7 @@ const checkAndSendReminders = (bot, supabase, adminIds, reminderDays) => {
       }
       
       // Construct reminder message
-      let message = '⚠️ *REMINDER: SIM Cards Due for Charging* ⚠️\n\n';
+      let message = '⚠️ *یادآوری: سیم کارت ها نیازمند شارژند* ⚠️\n\n';
       
       simsNeedingCharge.forEach(sim => {
         const lastCharged = sim.last_charged ? moment(sim.last_charged) : null;
@@ -44,12 +44,13 @@ const checkAndSendReminders = (bot, supabase, adminIds, reminderDays) => {
         const daysRemaining = lastCharged ? 180 - now.diff(lastCharged, 'days') : 0;
         
         message += `📱 *${sim.number}*\n`;
-        message += `Last Charged: ${lastCharged ? lastCharged.format('YYYY-MM-DD') : 'Never'}\n`;
-        message += `Days Since Charge: ${daysSinceCharge}\n`;
-        message += `Days Remaining: ${daysRemaining <= 0 ? '⚠️ OVERDUE' : daysRemaining}\n\n`;
+        message += `آخرین شارژ: ${lastCharged ? lastCharged.format('YYYY-MM-DD') : 'Never'}\n`;
+        message += `روز های گذشته از شارژ: ${daysSinceCharge}\n`;
+        message += `روز های باقیمانده: ${daysRemaining <= 0 ? '⚠️ OVERDUE' : daysRemaining}\n\n`;
       });
       
       message += 'Use /markcharged to update the charging status.';
+      message += 'از /markcharged برای تغییر وضعیت سیم استفاده کنید.';
       
       // Send reminder to all admins
       for (const adminId of adminIds) {
@@ -65,18 +66,18 @@ const checkAndSendReminders = (bot, supabase, adminIds, reminderDays) => {
       });
       
       if (criticalSims.length > 0) {
-        let warningMessage = '🚨 *URGENT: SIM Cards Critical Warning* 🚨\n\n';
-        warningMessage += 'The following SIM cards are close to expiration and need immediate attention:\n\n';
+        let warningMessage = '🚨 *اخطار: وضعیت اظطراری شارژ* 🚨\n\n';
+        warningMessage += 'سیم کارت های زیر نزدیک به مسدود شدن و نیازمند شارژ سریع اند:\n\n';
         
         criticalSims.forEach(sim => {
           const lastCharged = moment(sim.last_charged);
           const daysRemaining = 180 - now.diff(lastCharged, 'days');
           
           warningMessage += `📱 *${sim.number}*\n`;
-          warningMessage += `Days Remaining: *${daysRemaining}*\n\n`;
+          warningMessage += `روزهای باقیمانده: *${daysRemaining}*\n\n`;
         });
         
-        warningMessage += 'Please charge these SIM cards as soon as possible!';
+        warningMessage += 'لطفا یکیتون به زودی شارژش کنه!';
         
         // Send warning to all admins
         for (const adminId of adminIds) {

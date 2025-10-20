@@ -6,54 +6,54 @@
 const handleStart = (bot) => (msg) => {
   const chatId = msg.chat.id;
   const firstName = msg.from.first_name;
-  
-  const message = `Hello ${firstName}! Welcome to RightelYar Bot.
 
-This bot helps you manage and track your Rightel SIM cards charging schedule.
+  const message = `سلام ${firstName}!
 
-Available commands:
-/viewsims - View all SIM cards and their status
-/markcharged - Mark a SIM card as charged
-/viewreminders - View SIM cards due for charging
-/addsim - Add a new SIM card to the database
-/help - Show this help message`;
+این بات کمک میکنه سیم کارت ها رو مدیریت کنیم تا مسدود نشن
+
+دستور ها:
+/viewsims - دیدن همه سیم کارت ها و وضعیتشون
+/markcharged - علامت گذاری سیم کارت به عنوان شارژ شده
+/viewreminders - دیدن سیم کارت هایی که شارژ نشده اند
+/addsim - اضافه کردن سیم کارت جدید به دیتابیس
+/help - دیدن این راهنما`;
 
   bot.sendMessage(chatId, message, {
-    parse_mode: 'Markdown',
+    parse_mode: "Markdown",
     reply_markup: {
       keyboard: [
-        ['📱 View SIM Cards', '💰 Mark as Charged'],
-        ['⏰ View Reminders', '➕ Add SIM Card'],
-        ['❓ Help']
+        ["📱 View SIM Cards", "💰 Mark as Charged"],
+        ["❓ Help", "➕ Add SIM Card"],
+        ["⏰ View Reminders"],
       ],
-      resize_keyboard: true
-    }
+      resize_keyboard: true,
+    },
   });
 };
 
 // Handle /help command
 const handleHelp = (bot) => (msg) => {
   const chatId = msg.chat.id;
-  
+
   const message = `*RightelYar Bot Help*
 
-This bot helps you manage and track your Rightel SIM cards charging schedule.
+این بات کمک میکنه سیم کارت ها رو مدیریت کنیم تا مسدود نشن
 
-*Available commands:*
-/view_sims - View all SIM cards and their status
-/mark_charged - Mark a SIM card as charged
-/view_reminders - View SIM cards due for charging
-/view_history - View charging history for SIM cards
-/help - Show this help message
+دستور ها:
+/viewsims - دیدن همه سیم کارت ها و وضعیتشون
+/markcharged - علامت گذاری سیم کارت به عنوان شارژ شده
+/viewreminders - دیدن سیم کارت هایی که شارژ نشده اند
+/addsim - اضافه کردن سیم کارت جدید به دیتابیس
+/help - دیدن این راهنما
 
-You can also use the keyboard buttons for easier navigation.`;
+همینطور میتونی از منو کیبوردی استفاده کنی.`;
 
   bot.sendMessage(chatId, message, {
-    parse_mode: 'Markdown'
+    parse_mode: "Markdown",
   });
 };
 
 module.exports = {
   handleStart,
-  handleHelp
+  handleHelp,
 };
