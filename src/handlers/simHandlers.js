@@ -54,7 +54,6 @@ const handleViewSims = (bot, supabase) => async (msg) => {
           ? formatDaysRemaining(daysRemaining)
           : daysRemaining
       }`;
-      
 
       message += "\n";
     });
@@ -113,7 +112,7 @@ const handleMarkCharged = (bot, supabase) => async (msg) => {
     // Send message with inline keyboard
     bot.sendMessage(
       chatId,
-      "💰 *یک سیم کارت رو برای تغییر وضعیت انتخاب کنید:*",
+      "💰 *یک سیم کارت رو برای تغییر وضعیت انتخاب کنید:*\n*با کلیک روی سیمکارت شماره شارژ میشود دقت کنید*",
       {
         parse_mode: "Markdown",
         reply_markup: {
@@ -163,7 +162,10 @@ const handleViewReminders = (bot, supabase, reminderDays) => async (msg) => {
       const daysRemaining = reminderDays - daysSinceCharge;
 
       // Show SIMs that have passed the reminder threshold OR are in critical state (less than 30 days remaining)
-      return daysSinceCharge >= reminderDays || (daysRemaining > 0 && daysRemaining <= 30);
+      return (
+        daysSinceCharge >= reminderDays ||
+        (daysRemaining > 0 && daysRemaining <= 30)
+      );
     });
 
     if (dueSims.length === 0) {
@@ -181,7 +183,9 @@ const handleViewReminders = (bot, supabase, reminderDays) => async (msg) => {
       const daysSinceCharge = lastCharged
         ? now.diff(lastCharged, "days")
         : "Never charged";
-      const daysRemaining = lastCharged ? reminderDays - daysSinceCharge : "N/A";
+      const daysRemaining = lastCharged
+        ? reminderDays - daysSinceCharge
+        : "N/A";
 
       message += `*${index + 1}. ${sim.number}*\n`;
       message += `روز گذشته از شارژ: ${daysSinceCharge}\n`;
