@@ -60,8 +60,15 @@ const checkAndSendReminders = (bot, supabase, adminIds, reminderDays) => {
       message += "از /markcharged برای تغییر وضعیت سیم استفاده کنید.";
 
       // Send reminder to all admins
+      let successfulSends = 0;
       for (const adminId of adminIds) {
-        bot.sendMessage(adminId, message, { parse_mode: "Markdown" });
+        try {
+          await bot.sendMessage(adminId, message, { parse_mode: "Markdown" });
+          successfulSends++;
+        } catch (error) {
+          console.error(`Failed to send reminder to admin ${adminId}:`, error.message);
+          // Continue with other admins despite this error
+        }
       }
 
       // Broadcast warning to all admins if any SIM is close to expiration (less than 30 days remaining)
@@ -88,17 +95,24 @@ const checkAndSendReminders = (bot, supabase, adminIds, reminderDays) => {
         warningMessage += "لطفا یکیتون هرچه زودتر شارژش کنه!";
 
         // Send warning to all admins
+        let criticalSuccessfulSends = 0;
         for (const adminId of adminIds) {
-          bot.sendMessage(adminId, warningMessage, { parse_mode: "Markdown" });
+          try {
+            await bot.sendMessage(adminId, warningMessage, { parse_mode: "Markdown" });
+            criticalSuccessfulSends++;
+          } catch (error) {
+            console.error(`Failed to send critical warning to admin ${adminId}:`, error.message);
+            // Continue with other admins despite this error
+          }
         }
 
         console.log(
-          `Sent critical warnings for ${criticalSims.length} SIMs to ${adminIds.length} admins.`
+          `Sent critical warnings for ${criticalSims.length} SIMs to ${criticalSuccessfulSends} of ${adminIds.length} admins.`
         );
       }
 
       console.log(
-        `Sent reminders for ${simsNeedingCharge.length} SIMs to ${adminIds.length} admins.`
+        `Sent reminders for ${simsNeedingCharge.length} SIMs to ${successfulSends} of ${adminIds.length} admins.`
       );
     } catch (error) {
       console.error("Error in reminder check:", error);

@@ -72,14 +72,24 @@ const handleViewSims = (bot, supabase) => async (msg) => {
 
 // Handle /mark_charged command
 const handleMarkCharged = (bot, supabase) => async (msg) => {
-  const chatId = msg.chat.id;
+  // Handle both direct messages and callback queries
+  const chatId = msg.chat_id || (msg.chat ? msg.chat.id : null);
+  
+  if (!chatId) {
+    console.error('Error: Chat ID not found in message object', msg);
+    return;
+  }
+  
+  // Extract page number from callback data if available
+  const pageMatch = msg.data ? msg.data.match(/^page:(\d+)$/) : null;
+  const page = pageMatch ? parseInt(pageMatch[1]) : 1;
+  const itemsPerPage = 10; // Show 10 SIM cards per page
 
   try {
     // Get all SIM cards from database
     const { data: sims, error } = await supabase
       .from("sims")
-      .select("*")
-      .order("number");
+      .select("*");
 
     if (error) throw error;
 
@@ -87,39 +97,100 @@ const handleMarkCharged = (bot, supabase) => async (msg) => {
       return bot.sendMessage(chatId, "هیچ سیمکارتی در دیتابیس نیست.");
     }
 
-    // Create inline keyboard with SIM cards
-    const inlineKeyboard = [];
+    // Calculate days remaining for each SIM and sort by days remaining (ascending)
     const now = moment();
-
-    sims.forEach((sim) => {
+    const simsWithDaysRemaining = sims.map(sim => {
       const lastCharged = sim.last_charged ? moment(sim.last_charged) : null;
       const daysRemaining = lastCharged
         ? 90 - now.diff(lastCharged, "days")
-        : "Never";
+        : -999; // Put never charged SIMs at the top with a very negative value
+      
+      return {
+        ...sim,
+        daysRemaining: daysRemaining
+      };
+    });
 
+    // Sort by days remaining (ascending - lowest days first)
+    simsWithDaysRemaining.sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+    // Calculate total pages
+    const totalPages = Math.ceil(simsWithDaysRemaining.length / itemsPerPage);
+    
+    // Get current page items
+    const startIndex = (page - 1) * itemsPerPage;
+    const currentPageSims = simsWithDaysRemaining.slice(startIndex, startIndex + itemsPerPage);
+
+    // Create inline keyboard with SIM cards for current page
+    const inlineKeyboard = [];
+
+    currentPageSims.forEach((sim) => {
+      const daysText = sim.daysRemaining === -999 
+        ? "Never charged" 
+        : `${sim.daysRemaining} روز باقیمانده`;
+      
       inlineKeyboard.push([
         {
-          text: `${sim.number} (${
-            typeof daysRemaining === "number"
-              ? daysRemaining + " روز باقیمانده"
-              : daysRemaining
-          })`,
+          text: `${sim.number} (${daysText})`,
           callback_data: `mark_charged:${sim.id}`,
         },
       ]);
     });
 
-    // Send message with inline keyboard
-    bot.sendMessage(
-      chatId,
-      "💰 *یک سیم کارت رو برای تغییر وضعیت انتخاب کنید:*\n*با کلیک روی سیمکارت شماره شارژ میشود دقت کنید*",
-      {
+    // Add pagination controls if needed
+    if (totalPages > 1) {
+      const paginationRow = [];
+      
+      if (page > 1) {
+        paginationRow.push({
+          text: "« قبلی",
+          callback_data: `page:${page - 1}`,
+        });
+      }
+      
+      paginationRow.push({
+        text: `صفحه ${page} از ${totalPages}`,
+        callback_data: "noop", // No operation
+      });
+      
+      if (page < totalPages) {
+        paginationRow.push({
+          text: "بعدی »",
+          callback_data: `page:${page + 1}`,
+        });
+      }
+      
+      inlineKeyboard.push(paginationRow);
+    }
+
+    // Prepare message text
+    const messageText = "💰 *یک سیم کارت رو برای تغییر وضعیت انتخاب کنید:*\n" +
+      "*با کلیک روی سیمکارت شماره شارژ میشود دقت کنید*\n" +
+      `نمایش ${currentPageSims.length} سیم‌کارت از ${simsWithDaysRemaining.length} (مرتب شده بر اساس روزهای باقیمانده)`;
+
+    // If this is from a callback query (pagination), edit the message
+    if (msg.message && msg.data && msg.message.message_id) {
+      bot.editMessageText(messageText, {
+        chat_id: chatId,
+        message_id: msg.message.message_id,
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: inlineKeyboard,
         },
-      }
-    );
+      });
+    } else {
+      // Otherwise send a new message
+      bot.sendMessage(
+        chatId,
+        messageText,
+        {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: inlineKeyboard,
+          },
+        }
+      );
+    }
   } catch (error) {
     console.error("Error fetching SIM cards for marking:", error);
     bot.sendMessage(chatId, "مشکل برام پیش امده کسگم به علی بگین درستم کنه");

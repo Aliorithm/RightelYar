@@ -296,6 +296,18 @@ bot.on('callback_query', async (callbackQuery) => {
     }
   } else if (data === 'view_sims') {
     handleViewSims(bot, supabase)(msg);
+  } else if (data.startsWith('page:')) {
+    // Handle pagination for mark_charged
+    bot.answerCallbackQuery(callbackQuery.id);
+    // Pass the callback query to the handler with the message and data
+    handleMarkCharged(bot, supabase)({
+      chat_id: msg.chat.id,
+      message: msg,
+      data: data
+    });
+  } else if (data === 'noop') {
+    // No operation for the page indicator button
+    bot.answerCallbackQuery(callbackQuery.id);
   }
 });
 
